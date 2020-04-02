@@ -1,0 +1,61 @@
+version: "3"
+services:
+  ftp-to-sftp-bridge:
+    image: delfer/alpine-ftp-server@sha256:240bffac33d3fdb79c0480defdd460e491d1fcab94d031e5850810a13107b171
+    container_name: ftp-to-sftp-bridge
+    volumes:
+      - ./config/vsftpd.conf/:/etc/vsftpd/vsftpd.conf
+      - ./custom_entrypoint.sh/:/bin/custom_entrypoint.sh
+      - "sshfs_for_user1:/ftp/user1:rw"
+      - "sshfs_for_user2:/ftp/user2:rw"
+    restart: always
+    ports:
+      - "21:21"
+      - "21000-21100:21000-21100"
+    env_file:
+        - ./.env
+    entrypoint:
+      - "/bin/custom_entrypoint.sh"
+
+volumes:
+  sshfs_for_user1:
+    driver: vieux/sshfs:latest
+    driver_opts:
+      sshcmd: "username@example-sftp-server.com:/subfolder1/subfolder"
+      IdentityFile: "/root/.ssh/user1.pem" # Note: This is not root on your system - this is root inside the sshfs plugin
+      transform_symlinks: ""
+      # Note: Only uncomment the debug option IF there is an error connecting, or else it will freeze
+      # debug: ""
+      follow_symlinks: ""
+      allow_other: ""
+      reconnect: ""
+      StrictHostKeyChecking: "no"
+      kernel_cache: ""
+      auto_cache: ""
+      big_writes: ""
+      cache: "yes"
+      compression: "no"
+      workaround: "truncate:rename"
+      uid: "1000"
+      gid: "1000"
+
+  sshfs_for_user2:
+    driver: vieux/sshfs:latest
+    driver_opts:
+      sshcmd: "username@another-sftp-server.com:/subfolder1/subfolder"
+      IdentityFile: "/root/.ssh/user2.pem" # Note: This is not root on your system - this is root inside the sshfs plugin
+      transform_symlinks: ""
+      # Note: Only uncomment the debug option IF there is an error connecting, or else it will freeze
+      # debug: ""
+      follow_symlinks: ""
+      allow_other: ""
+      reconnect: ""
+      StrictHostKeyChecking: "no"
+      kernel_cache: ""
+      auto_cache: ""
+      big_writes: ""
+      cache: "yes"
+      compression: "no"
+      workaround: "truncate:rename"
+      uid: "1001"
+      gid: "1001"
